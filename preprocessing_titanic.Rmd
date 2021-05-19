@@ -1,0 +1,57 @@
+---
+title: "Preprocessing Titanic Dataset"
+author: "Guillem Fernández Pallarès i Miquel Tomé Carreño"
+date: '`r format(Sys.Date(),"%e de %B, %Y")`'
+toc-title: "Índex"
+output:
+  pdf_document:
+    number_sections: true
+    toc: true
+header-includes:
+  \DeclareUnicodeCharacter{0007}{}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Descripció del dataset
+
+El dataset escollit ha estat *Titanic: Machine Learning from Disaster* disponible [a aquest enllaç](https://www.kaggle.com/c/titanic/data). Amb aquest joc de dades es pretenen aplicar algoritmes de Machine Learning posteriors al preprocessat de les dades per crear models predictius que permetin construir un model que prevegui, en funció d'unes variables determinades, un determinat passatger sobreviurà o no al conegut accident.
+
+# Integració i selecció de dades
+
+Les dades utilitzades es troben dividides en dos datasets diferents: un d'ells conté el subconjunt de dades que serà utilitzat al set d'entrenament o *training set* i l'altre conté aquelles que seran utilitzades al test de prova o *testing set* per comprovar l'eficàcia del model construït. Els dos subconjunts s'integraran en un de sol per dur a terme el preprocessat de les dades.
+
+Primerament, es llegiran ambdós fitxers i s'afegirà una columna a cadascun d'ells que indicarà si un determinat registre pertany al subconjunt d'entrenament o de prova. Addicionalment, cal esmentar que al subset de prova s'ha afegit la columna `Survived` amb valors perduts `NA`, que és la variable dicotòmica a predir i que està present a l'altre subset.
+
+```{r read files}
+# Lectura del training set.
+r_train <- read.csv("train.csv")
+summary(r_train)
+
+# Lectura del testing set i addició de la variable a predir.
+r_test <- read.csv("test.csv")
+r_test$Survived <- NA
+summary(r_test)
+
+
+# Addició de la columna amb la classificació train-test.
+r_train$train_test <- "train"
+r_test$train_test <- "test"
+
+# Concatenació dels dos subsets.
+data <- rbind(r_train,
+              r_test)
+
+# Comprovació que s'ha concatenat correctament.
+nrow(r_train) + nrow(r_test) == nrow(data)
+```
+
+Pel que fa a la selecció de les dades, es trindran en compte la totalitat de registres dels quals es disposa, els quals seran considerats durant la fase de preprocessat de les dades.
+
+# Neteja de les dades
+
+## Valors perduts
+
+## Valors extrems o *outliers*
