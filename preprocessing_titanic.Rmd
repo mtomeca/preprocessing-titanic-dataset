@@ -17,7 +17,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Descripció del dataset
 
-El dataset escollit ha estat *Titanic: Machine Learning from Disaster* disponible [a aquest enllaç](https://www.kaggle.com/c/titanic/data). Amb aquest joc de dades es pretenen aplicar algoritmes de Machine Learning posteriors al preprocessat de les dades per crear models predictius que permetin construir un model que prevegui, en funció d'unes variables determinades, un determinat passatger sobreviurà o no al conegut accident.
+El dataset escollit ha estat *Titanic: Machine Learning from Disaster* disponible [a aquest enllaç](https://www.kaggle.com/c/titanic/data). Amb aquest joc de dades es pretenen aplicar algorismes de Machine Learning posteriors al preprocessat de les dades per crear models predictius que permetin construir un model que prevegui, en funció d'unes variables determinades, un determinat passatger sobreviurà o no al conegut accident.
+
+El dataset descarregat es composa de 3 fitxers, els quals es troben en format `csv`.
+
+El primer fitxer, `gender_submission.csv`, és un exemple del fitxer resultant a presentar un cop realitzat l'exercici, i conté una relació dels passatgers que van sobreviure amb dues columnes: identificador del passatger i el sexe (0 = Dona i 1 = Home). 
+
+Els altres dos fitxers contenen el conjunt de dades que ens serviran per entrenar l'algorisme (conjunt `train.csv`) i les dades de test (conjunt `test.csv`) que ens serviran per calcular el nivell de precisió en les prediccions del nostre algorisme i que seran les dades que haurem d'entregar per tal que se'ns valori en la competició de Kaggle. 
+
+En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Per saber com funciona la divisió de les dades entre els conjunts train i test és bo mirar [aquest vídeo](https://materials.campus.uoc.edu/cdocent/PID_00251986/).
 
 # Integració i selecció de dades
 
@@ -52,6 +60,21 @@ Pel que fa a la selecció de les dades, es trindran en compte la totalitat de re
 
 # Neteja de les dades
 
+El següent pas a dur a terme abans de l'anàlisi de les dades, és la neteja i preprocessat d'aquestes. En els dos següents apartats es realitzarà un breu estudi per determinar si existeixen valors perduts i/o valors extrems.
+
 ## Valors perduts
+
+Primerament, s'inspeccionaran les dades de les quals es disposa amb la finalitat de trobar els valors perduts. Es consideraran tant els que tenen associat el valor `NA` com els que tenen camps en blanc. Addicionalment, es comprovarà que els `NA` introduïts manualment a la variable `Survived` en apartats anteriors es corresponen a la totalitat de valors perduts de la columna, és a dir, es comprovarà que la variable que es vol predir no contingui valors perduts al subset d'entrenament de l'algorisme.
+
+```{r missing values}
+# Total de valors perduts al dataset.
+colSums(is.na(data))
+colSums(data=="")
+
+# Comprovació que les dades d'entrenament no tenen valors perduts.
+sum(is.na(data$Survived[data$train_test == "train"]))
+```
+
+Com es pot observar, les columnes que contenen valors perduts són `Survived` (tot i que es corresponen amb els assignats manualment), `Age`, `Fare`, `Cabin` i `Embarked`.
 
 ## Valors extrems o *outliers*
