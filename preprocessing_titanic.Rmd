@@ -14,6 +14,10 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r}
+# Packages to import
+library("tidyr")
+```
 
 # Descripció del dataset
 
@@ -56,11 +60,36 @@ data <- rbind(r_train,
 nrow(r_train) + nrow(r_test) == nrow(data)
 ```
 
+###CONVERTIR ALGUNES VARIABLES###
+
+1. Convertir la variable *Age* a tipus Integer
+
+2. Fer un split de la variable *Name* per separar nom i cognom. Ens pot aportar informació a l'hora d'entrenar l'algorisme i poder predir millor les dades del conjunt train.
+
+3. Convertir variable *Pclass* a factor.
+
+```{r}
+#  Convertir la variable *Age* a tipus Integer
+data$Age <- as.integer(data$Age)
+
+# Fer un split de la variable *Name* per separar nom i cognom
+data$Name <- as.character(data$Name)
+data <- data %>%
+  separate(Name, c("Surname", "Name"), ",")
+
+# Convertir variable *Pclass* a factor
+data$Pclass <- as.factor(data$Pclass)
+
+data
+```
+
 Pel que fa a la selecció de les dades, es trindran en compte la totalitat de registres dels quals es disposa, els quals seran considerats durant la fase de preprocessat de les dades.
 
 # Neteja de les dades
 
 El següent pas a dur a terme abans de l'anàlisi de les dades, és la neteja i preprocessat d'aquestes. En els dos següents apartats es realitzarà un breu estudi per determinar si existeixen valors perduts i/o valors extrems.
+
+És important 
 
 ## Valors perduts
 
@@ -72,7 +101,7 @@ colSums(is.na(data))
 colSums(data=="")
 
 # Comprovació que les dades d'entrenament no tenen valors perduts.
-sum(is.na(data$Survived[data$train_test == "train"]))
+cat("\nValors perduts de la columna 'Survived' del conjunt de train: ", sum(is.na(data$Survived[data$train_test == "train"])))
 ```
 
 Com es pot observar, les columnes que contenen valors perduts són `Survived` (tot i que es corresponen amb els assignats manualment), `Age`, `Fare`, `Cabin` i `Embarked`. Es tractaran diferentment en funció del seu format.
@@ -80,7 +109,7 @@ Com es pot observar, les columnes que contenen valors perduts són `Survived` (t
 \begin{enumerate}
   \item Els valors perduts de la variable `Survived` es deixaran sense tractar, ja que corresponen als que han estat inserits manualment a la columna per tal de poder ajuntar el subset d'entrenament i el de prova. Posteriorment, es descartarà aquesta variable quan es torni a separar els dos subconjunts de dades.
   \item A les variables `Age` i `Fare`, ambdues numèriques, es substituiran els valors perduts per la mediana de la variable. Es tria aquesta opció perquè la mediana és una mesura de tendència central menys sensible a valors extrems que la mitjana.
-  \item La columna `Embarked`, corresponent al port on va embarcar el passatger en qüestió, conté una variable categòrica que no pot ser ordenada en ordre creixent o decreixent, com podria fer-se amb una variable numèrica. Per tant, en aquest cas s'associarà als valors perduts d'aquesta columna un valor desconegut `Unknown`.
+  \item La columna `Embarked`, corresponent al port on va embarcar el passatger en qüestió, conté una variable categòrica que no pot ser ordenada en ordre creixent o decreixent, com podria fer-se amb una variable numèrica contínua. Per tant, en aquest cas s'associarà als valors perduts d'aquesta columna un valor desconegut `Unknown`.
 \end{enumerate}
 
 ```{r treat missing values}
