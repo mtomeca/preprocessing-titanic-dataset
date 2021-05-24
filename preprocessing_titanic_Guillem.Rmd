@@ -1,0 +1,162 @@
+---
+title: "Preprocessing Titanic Dataset"
+author: "Guillem Fernández Pallarès i Miquel Tomé Carreño"
+date: "`r format(Sys.Date(),'%e de %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+header-includes: \DeclareUnicodeCharacter{0007}{}
+toc-title: Índex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+# Packages to import
+library("tidyr")
+library("party")
+library("rpart")
+library("rpart.plot")
+```
+
+##1. Descripció del dataset
+
+El dataset escollit ha estat *Titanic: Machine Learning from Disaster* disponible [a aquest enllaç](https://www.kaggle.com/c/titanic/data). Amb aquest joc de dades es pretenen aplicar algorismes de Machine Learning posteriors al preprocessat de les dades per crear models predictius que permetin construir un model que prevegui, en funció d'unes variables determinades, un determinat passatger sobreviurà o no al conegut accident.
+
+El dataset descarregat es composa de 3 fitxers, els quals es troben en format `csv`.
+
+El primer fitxer, `gender_submission.csv`, és un exemple del fitxer resultant a presentar un cop realitzat l'exercici, i conté una relació dels passatgers que van sobreviure amb dues columnes: identificador del passatger i el sexe (0 = Dona i 1 = Home). 
+
+Els altres dos fitxers contenen el conjunt de dades que ens serviran per entrenar l'algorisme (conjunt `train.csv`) i les dades de test (conjunt `test.csv`) que ens serviran per calcular el nivell de precisió en les prediccions del nostre algorisme i que seran les dades que haurem d'entregar per tal que se'ns valori en la competició de Kaggle. 
+
+En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Per saber com funciona la divisió de les dades entre els conjunts train i test és bo mirar [aquest vídeo](https://materials.campus.uoc.edu/cdocent/PID_00251986/).
+
+##2. Integració i selecció de dades
+
+Les dades utilitzades es troben dividides en dos datasets diferents: un d'ells conté el subconjunt de dades que serà utilitzat al set d'entrenament o *training set* i l'altre conté aquelles que seran utilitzades al test de prova o *testing set* per comprovar l'eficàcia del model construït. Malgrat podríem haver agrupat els dos subconjunts en un per dur a terme la neteja de dades, hem decidit finalment fer la neteja per separat però utilitzant el mateix procediment. És per això que ens decantem per la utilització de funcions pròpies que aplicaran el mateix procediment tant al conjunt train com el de test.
+
+Pel que fa a la selecció de les dades, es trindran en compte la totalitat de registres dels quals es disposa, els quals seran considerats durant la fase de preprocessat de les dades. En fases posteriors, descartarem aquelles variables que considerem irrellavants per a la creació d'un model de predicció.
+
+```{r read files}
+# Lectura del training set.
+titanic_train <- read.csv("train.csv")
+head(titanic_train)
+
+# Lectura del testing set.
+titanic_test <- read.csv("test.csv")
+titanic_test$Survived <- NA
+head(titanic_test)
+```
+
+##3. Neteja i transformació de les dades
+
+```{r}
+for (i in 1:ncol(titanic_train)) {
+  cat("\nLa columna", colnames(titanic_train[i]), "presenta", sum(is.na(titanic_train[,i]) | titanic_train[,i] == ""), "valors nuls o buits")
+}
+```
+
+
+###Dades amb elements buits o NaN. Gestió de casos###
+
+```{r}
+clean_transform <- function(x){
+  
+  # Neteja i transformació de la variable Sex
+  x$Sex_Numeric <- as.character(x$Sex)
+  x$Sex_Numeric[x$Sex_Numeric=="male"] <- "1"
+  x$Sex_Numeric[x$Sex_Numeric=="female"] <- "0"
+  x$Sex_Numeric <- as.factor(x$Sex_Numeric)
+  
+  # Passem la variable Age a Integer
+  x$Age <- as.integer(x$Age)
+  
+  # Separem la variable Name entre Cognoms i Nom
+  x$Name <- as.character(x$Name)
+  x <- x %>%
+    separate(Name, c("Surname", "Name"), ",")
+  
+  # Els valors buits o NA de Embarked els hi associem el valor més freqüent.
+  x$Embarked[is.na(x$Embarked) | x$Embarked == ""] <- names(which.max(table(titanic_train$Embarked,useNA="no")))
+  
+  # Convertim la variable Embarked a numèrica
+  x$Embarked_Numeric <- as.character(x$Embarked)
+  x$Embarked_Numeric[x$Embarked_Numeric=="C"] <- "0"
+  x$Embarked_Numeric[x$Embarked_Numeric=="Q"] <- "1"
+  x$Embarked_Numeric[x$Embarked_Numeric=="S"] <- "2"
+  x$Embarked_Numeric <- as.factor(x$Embarked_Numeric)
+  
+  # Convertim la variable dependent Survived a factor
+  if("Survived" %in% colnames(x)) {
+    x$Survived <- as.character(x$Survived)
+    x$Survived[x$Survived=="0"] <- "Died"
+    x$Survived[x$Survived=="1"] <- "Survived"
+    x$Survived <- as.factor(x$Survived)
+  } else {
+    
+  }
+  return(x)
+}
+
+titanic_train_clean <- clean_transform(titanic_train)
+head(titanic_train_clean[, c("Survived", "Surname", "Name", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+```
+
+```{r}
+titanic_test_clean <- clean_transform(titanic_test)
+head(titanic_test_clean[, c("Surname", "Name", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+```
+
+###Valors extrems (outliers)###
+
+```{r boxplot}
+# Boxplot per la variable Age.
+boxplot(titanic_train_clean$Age, main="Distribució variable Age")
+
+# Boxplot per SibSp i Parch.
+boxplot(titanic_train_clean[c("SibSp", "Parch")], main="Distribució variable Siblings/Spouse i Parch")
+
+# Boxplot per Fare.
+boxplot(titanic_train_clean$Fare, main="Distribució variable Fare")
+
+# outliers_SibSp <- boxplot.stats(titanic_train_clean$SibSp)$out
+# outliers_SibSp
+```
+```{r}
+tree <- rpart(Survived ~., data = titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")])
+rpart.plot(tree)
+
+train_prediction <- predict(tree, titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], type = 'class')
+```
+
+```{r}
+confMat_train <- table(titanic_train_clean$Survived, train_prediction)
+accuracy_tree <- sum(diag(confMat))/sum(confMat)
+cat("El model d'arbre de decisió té una precisió del", round(accuracy_tree, 3),"% pel conjunt d'entrenament")
+```
+
+```{r}
+test_prediction <- predict(tree, titanic_test_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], type = 'class')
+titanic_test_clean$Survived <- test_prediction
+head(titanic_test_clean[, c("Survived", "Surname", "Name", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+```
+
+NOTA: Es podria provar de fer una matriu de correlació entre les variables per millorar el rendiment de l'arbre
+```{r}
+any(is.na(titanic_train_clean$Embarked_Numeric))
+```
+
+```{r}
+library("corrplot")
+
+titanic_train_clean$Sex_Numeric <- as.integer(titanic_train_clean$Sex_Numeric)
+titanic_train_clean$Embarked_Numeric <- as.integer(titanic_train_clean$Embarked_Numeric)
+
+cor(titanic_train_clean[,c("Age", "Fare", "Sex_Numeric")], method = c("pearson"))
+```
+
