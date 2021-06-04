@@ -25,7 +25,7 @@ library("pROC")
 library("nortest")
 ```
 
-#1. Descripció del dataset
+# 1. Descripció del dataset
 
 El dataset escollit ha estat *Titanic: Machine Learning from Disaster* disponible [a aquest enllaç](https://www.kaggle.com/c/titanic/data). Amb aquest joc de dades es pretenen aplicar algorismes de Machine Learning posteriors al preprocessat de les dades per crear models predictius que permetin construir un model que prevegui, en funció d'unes variables determinades, un determinat passatger sobreviurà o no al conegut accident.
 
@@ -50,7 +50,7 @@ Les variables que podem trobar tant al fitxer train.csv com al de test.csv, són
 
 En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Per saber com funciona la divisió de les dades entre els conjunts train i test és bo mirar [aquest vídeo](https://materials.campus.uoc.edu/cdocent/PID_00251986/).
 
-#2. Integració i selecció de dades
+# 2. Integració i selecció de dades
 
 Les dades utilitzades es troben dividides en dos datasets diferents: un d'ells conté el subconjunt de dades que serà utilitzat al set d'entrenament o *training set* i l'altre conté aquelles que seran utilitzades al test de prova o *testing set* per comprovar l'eficàcia del model construït. Els dos subconjunts s'integraran en un de sol per facilitar el recompte de valors perduts que presenten.
 
@@ -90,10 +90,10 @@ El següent pas a dur a terme abans de l'anàlisi de les dades, és la neteja i 
 
 ## 3.1. Valors perduts
 
-Primerament, s'inspeccionaran les dades de les quals es disposa amb la finalitat de trobar els valors perduts. Es consideraran tant els que tenen associat el valor `NA` com els que tenen camps en blanc. Addicionalment, es comprovarà que els `NA` introduïts manualment a la variable `Survived` en apartats anteriors es corresponen a la totalitat de valors perduts de la columna, és a dir, es comprovarà que la variable que es vol predir no contingui valors perduts al subset d'entrenament de l'algorisme.
+Primerament, s'inspeccionaran les dades de les quals es disposa amb la finalitat de trobar els valors perduts. Es consideraran tant els que tenen associat el valor `NA` com els que tenen camps en blanc, a més a més d'estudiar la versemblança de les variables numèriques que prenen valor 0. Addicionalment, es comprovarà que els `NA` introduïts manualment a la variable `Survived` en apartats anteriors es corresponen a la totalitat de valors perduts de la columna, és a dir, es comprovarà que la variable que es vol predir no contingui valors perduts al subset d'entrenament de l'algorisme.
 
 ```{r missing values}
-# Total de valors perduts al dataset.
+# Total de valors perduts o buits al dataset.
 for (i in 1:ncol(data)-1) {
   cat("\nLa columna",
       colnames(data[i]),
@@ -103,16 +103,29 @@ for (i in 1:ncol(data)-1) {
 }
 
 # Comprovació que les dades d'entrenament no tenen valors perduts a Survived.
-cat("\n\nLa suma de valors perduts per al conjunt de dades són:",sum(is.na(data$Survived[data$train_test == "train"])))
+cat("\n\nLa suma de valors perduts per al conjunt d'entrenament són:",sum(is.na(data$Survived[data$train_test == "train"])))
+
+# Total de zeros a cada columna del dataset.
+for (i in 1:ncol(data)-1) {
+  cat("\nLa columna",
+      colnames(data[i]),
+      "presenta",
+      sum(data[,i] == 0, na.rm = T),
+      "zeros.")
+}
 ```
 
 Com es pot observar, les columnes que contenen valors perduts són `Survived` (tot i que es corresponen amb els assignats manualment), `Age`, `Fare` i `Embarked`. Es tractaran diferentment en funció del seu format.
 
-\begin{enumerate}
-  \item Els valors perduts de la variable `Survived` es deixaran sense tractar, ja que corresponen als que han estat inserits manualment a la columna per tal de poder ajuntar el subset d'entrenament i el de prova. Posteriorment, es descartarà aquesta variable quan es torni a separar els dos subconjunts de dades.
-  \item A les variables `Age` i `Fare`, ambdues numèriques, es substituiran els valors perduts per la mediana de la variable. Es tria aquesta opció perquè la mediana és una mesura de tendència central menys sensible a valors extrems que la mitjana.
-  \item La columna `Embarked`, corresponent al port on va embarcar el passatger en qüestió, conté una variable categòrica que no pot ser ordenada en ordre creixent o decreixent, com podria fer-se amb una variable numèrica. Per tant, en aquest cas s'associarà als valors perduts d'aquesta columna el valor més freqüent.
-\end{enumerate}
+* Els valors perduts de la variable `Survived` es deixaran sense tractar, ja que corresponen als que han estat inserits manualment a la columna per tal de poder ajuntar el subset d'entrenament i el de prova. Posteriorment, es descartarà aquesta variable quan es torni a separar els dos subconjunts de dades.
+* A les variables `Age` i `Fare`, ambdues numèriques, es substituiran els valors perduts per la mediana de la variable. Es tria aquesta opció perquè la mediana és una mesura de tendència central menys sensible a valors extrems que la mitjana.
+* La columna `Embarked`, corresponent al port on va embarcar el passatger en qüestió, conté una variable categòrica que no pot ser ordenada en ordre creixent o decreixent, com podria fer-se amb una variable numèrica. Per tant, en aquest cas s'associarà als valors perduts d'aquesta columna el valor més freqüent.
+
+Paral·lelament, també s'han observat valors numèrics nuls (0s) a les variables `Survived`, `SibSp`, `Parch` i `Fare`. Aquests casos es tractaran de la següent manera:
+
+* Els zeros de la variable `Survived` es consideren coherents, ja que aquests fan referència a un dels dos factors de la variable dicotòmica que indica si el passatger va sobreviure o no a l'accident. Per aquest motiu, no es considera necessari tractar-los.
+* Els zeros de les variables `SibSp` i `Parch` es consideren adequats, ja que és possible que hi hagués passatgers a bord sense que el seu germà o parella hi fos, de la mateixa manera que hi poden haver passatgers sense fills o fills que viatgéssin sols.
+* Els zeros de la variable `Fare` hauran de ser tractats, ja que es considera impossible el fet que hi hagi passatgers que viatgen gratuïtament. De la mateixa manera que s'ha decidit fer amb els valors buits, els 0 es substitueixen per la mediana de la variable. Es realitzarà abans aquesta substitució que la de valors buits per calcular correctament la mediana.
 
 Es crearà una funció per tal de facilitar el preprocessat de les dades que pertanyen als dos subconjunts, el d'entrenament i el de prova.
 
@@ -131,9 +144,10 @@ clean_transform <- function(x){
   x$Age[is.na(x$Age) | x$Age == ""] <- median(x$Age, na.rm = TRUE)
   x$Age[x$Age==0] <- 1
   
-  # Els valors buits o NA de Fare es substitueixen per la mediana.
+  # Els valors buits o NA de Fare es substitueixen per la mediana, així com els 0s.
+  x$Fare[x$Fare == 0] <- median(x$Fare, na.rm = TRUE)
   x$Fare[is.na(x$Fare) |
-               x$Fare == ""] <- median(x$Fare, na.rm = TRUE)
+           x$Fare == ""] <- median(x$Fare, na.rm = TRUE)
   
   # Els valors buits o NA de Embarked els hi associem el valor més freqüent.
   x$Embarked[is.na(x$Embarked) |
@@ -188,12 +202,11 @@ boxplot(titanic_train_clean$Fare,
 
 Als gràfics obtinguts es pot observar el següent:
 
-\begin{enumerate}
-  \item Les dues primeres representacions, tot i mostrar punts que es podrien considerar valors extrems, mostren valors raonables d'acord amb la magnitud o realitat que representen. Per aquest motiu, no se'ls descartarà ni es tractaran de cap manera.
-  \item L'última figura, corresponent a la variable `Fare`, mostra dos grups considerablement allunyats de la caixa representada. Es considera que aquests punts podrien contenir algun tipus d'error i es decideix reassignar el seu valor pel de la mediana de la variable.
-\end{enumerate}
+* Les dues primeres representacions, tot i mostrar punts que es podrien considerar valors extrems, s'observen valors raonables d'acord amb la magnitud o realitat que representen. Per aquest motiu, no se'ls descartarà ni es tractaran de cap manera.
+* L'última figura, corresponent a la variable `Fare`, mostra dos grups considerablement allunyats de la caixa representada. Es considera que aquests punts podrien contenir algun tipus d'error i es decideix reassignar el seu valor pel de la mediana de la variable.
 
 ```{r outliers Fare}
+# Tractament dels outliers de la variable Fare.
 titanic_train_clean$Fare[titanic_train_clean$Fare > 200] <-
   median(titanic_train_clean$Fare, na.rm = TRUE)
 
@@ -206,9 +219,19 @@ boxplot(titanic_train_clean$Fare,
 
 ## 4.1. Planificació dels anàlisis
 
+En aquesta secció es realitzaran diverses proves que permetran conèixer amb una major profunditat l'aparença i el comportament col·lectiu de les dades de les quals es disposa per posteriorment aplicar algorismes que permetin la construcció de models que puguin predir si un determinat passatger, en funció d'algunes de les variables de les quals es disposa, va sobreviure o no a l'accident que va patir el Titanic.
+
+Primerament, es construirà una matriu de correlació que permetrà conèixer com es correlacionen entre elles les diferents variables que s'ha decidit analitzar del dataset. A continuació, s'aplicaran dos algorismes supervisats per intentar predir el resultat o *outcome* de la variable `Survived`:
+
+1. Un arbre de decisió o *decision tree*.
+
+2. Una regressió logística.
+
+No obstant, abans de començar amb la part que comprèn estrictament l'anàlisi de dades, cal dur a terme una inspecció introductòria del comportament de les dades de les quals es disposa. Per aquest motiu, a continuació s'estudiarà la normalitat i homoscedasticitat del dataset.
+
 ## 4.2. Comprovació de la normalitat i l'homoscedasticitat
 
-Per a fer l'estudi de la normalitat, analitzarem les variables que finalment hem seleccionat per construir el nostre model. Farem l'estudi comprovant si aquelles variables contínues que es troben en els conjunts de dades de train i test presenten una distribució normal o no. Les variables contínues que té sentit que analitzem des d'un punt de vista de distribució normal són: Age i Fare
+Per a fer l'estudi de la normalitat, analitzarem les variables que finalment hem seleccionat per construir el nostre model. Farem l'estudi comprovant si aquelles variables contínues que es troben en els conjunts de dades de train i test presenten una distribució normal o no. Les variables contínues que té sentit que analitzem des d'un punt de vista de distribució normal són `Age` i `Fare`.
 
 En primer lloc, farem la representació des d'un punt de vista visual a partir d'histogrames amb les línies de denisitat corresponents.
 
@@ -252,7 +275,7 @@ legend("topright", c("curva observada", "curva teòrica"),
 
 Un cop fetes les representacions gràfiques, tocarà fer-ho des d'un punt de vista estadístic i no tant visual.
 
-Per fer-ho des d'un punt de vista estadístic, realitzarem dos tests: aplicarem el test de Shapiro i el test de Lillie. Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre valor alfa de 0.05. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
+Per fer-ho des d'un punt de vista estadístic, realitzarem dos tests: aplicarem el test de Shapiro i el test de Lillie. Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre nivell de significació alfa de $\alpha=0.05$. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
 
 ```{r}
 # Apliquem Shapiro Test a les variables del conjunt de train
@@ -264,7 +287,7 @@ shapiro.test(titanic_test_clean$Age)
 shapiro.test(titanic_test_clean$Fare)
 ```
 
-Segons el test de Shapiro, cap de les dues variables segueixen una distribució normal, ni pel conjunt d'entrenament ni pel de prova. Tots els p-values estan per sota del nivell de significació del 0.05.
+Segons el test de Shapiro, cap de les dues variables segueix una distribució normal, ni pel conjunt d'entrenament ni pel de prova. Tots els p-values estan per sota del nivell de significació del 0.05.
 
 ```{r}
 # Apliquem Lillie Test a les variables del conjunt de train
@@ -281,38 +304,65 @@ Si ho verifiquem amb el Lillie test, veiem que segons aquest les dades tampoc se
 
 NOTA: FALTA REALITZAR EL TEST DE LES VARIÀNCIES QUE HO FAREM AMB ANOVA.
 
-## Aplicació dels anàlisis de dades
+## 4.3. Aplicació dels anàlisis de dades
 
-### Matriu de correlació
+### 4.3.1. Matriu de correlació
+
+Abans de començar a plantejar els algorismes que s'implantaran, es farà un breu estudi sobre la correlació entre les múltiples variables que comprèn el dataset. Concretament, es construirà una matriu de correlació en el qual cadascun dels elements de la matriu correspondrà a la correlació de Pearson entre dues variables. Cal esmentar que tan sols s'utilitzaran les variables numèriques de les quals es disposa, tant les manipulades com les que eren numèriques inicialment.
 
 ```{r correlation matrix}
-titanic_train_clean$Sex_Numeric <- titanic_train_clean$Sex_Numeric
-titanic_train_clean$Embarked_Numeric <- titanic_train_clean$Embarked_Numeric
+# Matriu de correlació.
 corr <-cor(titanic_train_clean[,c("Age", "Fare", "Sex_Numeric", "Pclass",
-                                  "SibSp", "Parch")], method = c("pearson"))
+                                  "SibSp", "Parch", "Embarked_Numeric")], method = c("pearson"))
 corrplot(corr, method="circle")
 ```
 
-Un cop vista la corrrelació entre les variables que disposem en el nostre dataset, decidim en passar Age, Fare, Sex_Numeric, Embarked_Numeric i Pclass. Certament, veiem que les variables Fare i Pclass estan correlacionades i podríem decidir només passar-ne una. Tot i això, en aquest cas no ens suposa un problema d'alt cost computacional passar totes les variables, i per tant no necessitem fer una reducció de dimensionalitat.
+Un cop vista la corrrelació entre les variables que disposem en el nostre dataset, decidim utilitzar `Age`, `Fare`, `Sex_Numeric`, `Embarked_Numeric` i `Pclass`. Certament, veiem que les variables `Fare` i `Pclass` estan considerablement correlacionades i podríem decidir només passar-ne una. Tot i això, en aquest cas no ens suposa un problema d'alt cost computacional passar totes les variables, i per tant no necessitem fer una reducció de dimensionalitat.
 
-### Arbre de decisió
+### 4.3.2. Arbre de decisió
+
+El primer algorisme que s'implantarà per tal de construir un model que pugui predir la supervivència d'un passatger a l'accident del Titanic serà un arbre de decisió. Aquest model predirà la variable de resposta `Survived` en funció de les variables explicatives `Age`, `Fare`, `Sex_Numeric`, `Embarked_Numeric` i `Pclass`.
+
+A continuació es mostra la representació gràfica de l'arbre generat i, posteriorment, s'efectua la predicció sobre el subconjunt d'entrenament.
 
 ```{r}
+# Arbre de decisió.
 tree <- rpart(Survived ~., data = titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")])
 rpart.plot(tree)
 
+# Predicció train.
 train_prediction <- predict(tree, titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")], type = 'class')
 ```
 
+La forma correcta d'interpretar l'arbre de decisió representat és la següent:
+
+1. El node superior mostra que la probabilitat global de supervivència és del 41%. A més a més, en aquest node es pregunta si el sexe del passatger és home (0) o dona (1).
+
+2. En cas de ser home (`Sex_Numeric=0`), les probabilitats de sobreviure són del 19%, mentre que si és una dona les probabilitats ascendeixen a un 74%, tal com mostren ambdues branques.
+
+3. Es procedeix anàlogament per les diferents branques que constitueixen l'arbre i que es regeixen per les variables `Pclass`, `Age` i `Fare`.
+
+Seguidament, es construeix una matriu de confusió contrastant els resultats predits i els resultats coneguts del set d'entrenament. A partir d'aquesta matriu és possible estimar la precisió del model construït.
+
 ```{r}
+# Matriu de connfusió.
 confMat_train <- table(titanic_train_clean$Survived, train_prediction)
+
+# Càlcul de la precisió del model.
 accuracy_tree <- sum(diag(confMat_train))/sum(confMat_train)
 cat("El model d'arbre de decisió té una precisió del", round(accuracy_tree*100, 2),"% pel conjunt d'entrenament")
 ```
 
+Com es pot observar, el model construit és considerablement robust, per la qual cosa es pot concloure en una primera aproximació que l'arbre de decisió és suficientment discriminatori.
+
+Finalment, s'efectua anàlogament la predicció de la variable `Survived` pel subconjunt de prova o testing set. Es mostra un breu fragment de la predicció realitzada.
+
 ```{r}
+# Predicció pel test.
 test_prediction <- predict(tree, titanic_test_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")], type = 'class')
 titanic_test_clean$Survived <- test_prediction
+
+# Inspecció del resultat.
 head(titanic_test_clean[, c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
 ```
 
@@ -329,15 +379,16 @@ roc <- roc(titanic_train_clean$Survived,
            train_prediction,
            data = titanic_train_clean)
 
-# Corba ROC.
+# Representació de la corba ROC.
 plot(roc)
 
-# AUROC.
+# Càlcul de AUROC.
 roc
 ```
 
+Els resultats obtinguts mostren una corba ROC que, en un primer anàlisi visual, sembla considerablement bona. El càlcul de l'AUROC efectuat confirma aquesta primera hipòtesi, ja que a partir d'un llindar de 0.8 es pot considerar que el model discrimina d'una forma excel·lent.
 
-### Model de regressió logística
+### 4.3.3. Model de regressió logística
 
 Finalment, es construirà un model de regressió logística amb la finalitat de predir si els passatgers van sobreviure o no en funció de les variables de les quals es disposa.
 
@@ -357,7 +408,7 @@ exp(coefficients(reg_log))
 
 Com es pot observar, l'única variable que pel test de Wald ha resultat no ser significativa ha estat `Fare`, presentant un *p-value* de 0.85. Per tant, aquesta variable no serà considerada alhora de construir el model amb el qual es duran a terme les prediccions sobre el test de prova. Addicionalment, els *odds ratio* o OR calculats per cadascuna de les variables mostren aquelles que són de protecció (OR<1) i aquelles que són variables de risc (OR>1).
 
-Un cop construït el model final de regressió logística s'efectuarà la predicció de la variable Survived pel subconjunt d'entrenament, fet que permetrà avaluar la precisió del model i les seves prediccions.
+Un cop construït el model final de regressió logística s'efectuarà la predicció de la variable Survived pel subconjunt d'entrenament, fet que permetrà avaluar la precisió del model i les seves prediccions. Com que el model permet obtenir una probabilitat de supervivència, es considerarà `Survived=1` tota probabilitat igual o superior a 0.5.
 
 ```{r logreg final}
 # Construcció del model FINAL.
@@ -383,22 +434,26 @@ cat("\nEl model de regressió logística té una precisió del",
     round(accuracy_reg*100, 2),"% pel conjunt d'entrenament.")
 ```
 
+Es procedirà de manera anàloga per tal d'efectuar la predicció pels registres del subset de prova o testing set.
+
 ```{r test prediction}
+# Predicció.
 reg_log_test_prediction <- predict(reg_log,
                            titanic_test_clean[,c("Survived", "Age",
                                                  "Sex_Numeric",
                                                  "Embarked_Numeric","Pclass")],
                            type = 'response')
 
-titanic_test_clean$Survived_Probability <- reg_log_test_prediction
+# Assignació de valors.
+titanic_test_clean$Survived <- ifelse(reg_log_test_prediction < 0.5,
+                                      0,
+                                      1)
 
-head(titanic_test_clean[, c("Survived_Probability", "Age",
+# Inspecció dels registres.
+head(titanic_test_clean[, c("Survived", "Age",
                             "Fare", "Sex_Numeric",
                             "Embarked_Numeric","Pclass")])
 ```
-
-Veiem que la columna Survived pel conjunt test ens dóna una probabilitat. Podríem dir que els valors superiors a 0.5 són "Survived", mentre que els inferiors a 0.5 els podríem catalogar com a "Died"
-
 
 Es presenta a continuació la corba ROC pel model de regressió construït. A més a més, es calcula també l'àrea sota la corba AUROC per aquest cas.
 
@@ -415,4 +470,8 @@ plot(roc)
 roc
 ```
 
-La figura mostra que el model és considerablement discriminant, mentre que el valor obtingut per l'AUROC, aproximadament 0.78, permet assgurar que hem acoseguit un model que discrimina de forma adequada i ens trobem molt prop d'un model que discrimina de forma excel·lent, el qual correspon a un AUROC mínim de 0.8.
+La figura mostra que el model és considerablement discriminant en una primera estimació visual, mentre que el valor obtingut per l'AUROC, d'aproximadament 0.78, permet assgurar que hem acoseguit un model que discrimina de forma adequada i ens trobem molt prop d'un model que discrimina de forma excel·lent, el qual correspon a un AUROC mínim de 0.8.
+
+# 5. Representació dels resultats
+
+# 6. Conclusions
