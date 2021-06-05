@@ -62,24 +62,19 @@ Pel que fa a la selecció de les dades, es trindran en compte la totalitat de re
 # Lectura del training set.
 r_train <- read.csv("train.csv")
 head(r_train)
-
 # Lectura del testing set i addició de la variable a predir.
 r_test <- read.csv("test.csv")
 r_test$Survived <- NA
 head(r_test)
-
 # Addició de la columna amb la classificació train-test.
 r_train$train_test <- "train"
 r_test$train_test <- "test"
-
 # Eliminació de les columnes que no són d'interès.
 r_train[,c("Name","Ticket","Cabin")] <- NULL
 r_test[,c("Name","Ticket","Cabin")] <- NULL
-
 # Concatenació dels dos subsets.
 data <- rbind(r_train,
               r_test)
-
 # Comprovació que s'ha concatenat correctament.
 nrow(r_train) + nrow(r_test) == nrow(data)
 ```
@@ -101,10 +96,8 @@ for (i in 1:ncol(data)-1) {
       sum(is.na(data[,i]) | data[,i] == ""),
       "valors nuls o buits.")
 }
-
 # Comprovació que les dades d'entrenament no tenen valors perduts a Survived.
 cat("\n\nLa suma de valors perduts per al conjunt d'entrenament són:",sum(is.na(data$Survived[data$train_test == "train"])))
-
 # Total de zeros a cada columna del dataset.
 for (i in 1:ncol(data)-1) {
   cat("\nLa columna",
@@ -172,11 +165,9 @@ clean_transform <- function(x){
   }
   return(x)
 }
-
 # Subconjunt d'entrenament.
 titanic_train_clean <- clean_transform(r_train)
 head(titanic_train_clean[, c("Survived", "Age", "Fare", "Sex_Numeric", "Pclass", "Embarked_Numeric")])
-
 # Subconjunt de prova.
 titanic_test_clean <- clean_transform(r_test)
 head(titanic_test_clean[, c("Age", "Fare", "Sex_Numeric", "Pclass", "Embarked_Numeric")])
@@ -190,11 +181,9 @@ El següent pas a dur a terme en la fase de la neteja de dades és la identifica
 # Boxplot per la variable Age.
 boxplot(titanic_train_clean$Age,
         main="Distribució variable Age")
-
 # Boxplot per SibSp i Parch.
 boxplot(titanic_train_clean[c("SibSp", "Parch")],
         main="Distribució variable Siblings/Spouse i Parch")
-
 # Boxplot per Fare.
 boxplot(titanic_train_clean$Fare,
         main="Distribució variable Fare")
@@ -209,7 +198,6 @@ Als gràfics obtinguts es pot observar el següent:
 # Tractament dels outliers de la variable Fare.
 titanic_train_clean$Fare[titanic_train_clean$Fare > 200] <-
   median(titanic_train_clean$Fare, na.rm = TRUE)
-
 # Boxplot per Fare.
 boxplot(titanic_train_clean$Fare,
         main="Distribució variable Fare")
@@ -295,7 +283,6 @@ Un cop fetes les representacions gràfiques, es durà a terme aquesta comprovaci
 # Apliquem Shapiro Test a les variables del conjunt de train
 shapiro.test(titanic_train_clean$Age)
 shapiro.test(titanic_train_clean$Fare)
-
 # Apliquem Shapiro Test a les variables del conjunt de test
 shapiro.test(titanic_test_clean$Age)
 shapiro.test(titanic_test_clean$Fare)
@@ -307,7 +294,6 @@ Segons el test de Shapiro, cap de les dues variables segueix una distribució no
 # Apliquem Lillie Test a les variables del conjunt de train
 lillie.test(titanic_train_clean$Age)
 lillie.test(titanic_train_clean$Fare)
-
 # Apliquem Lillie Test a les variables del conjunt de test
 lillie.test(titanic_test_clean$Age)
 lillie.test(titanic_test_clean$Fare)
@@ -333,7 +319,7 @@ Repetim el procés amb *Fare*.
 var.test(r_test$Fare, r_train$Fare)
 ```
 
-Ara bé, per la variable *Fare* obtenim un valor de 0.004, la qual cosa ens obliga a rebutjar la hipòtesis nul·la d'igualtat de variàncies, i hem de considerar que les variàncies són diferents (heteroscedasticitat)
+Ara bé, per la variable *Fare* obtenim un valor de 0.004, la qual cosa ens obliga a rebutjar la hipòtesis nul·la d'igualtat de variàncies, i hem de considerar que les variàncies són diferents (heteroscedasticitat).
 
 ## 4.3. Aplicació dels mètodes d'anàlisis de dades
 
@@ -360,7 +346,6 @@ A continuació es mostra la representació gràfica de l'arbre generat i, poster
 # Arbre de decisió.
 tree <- rpart(Survived ~., data = titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")])
 rpart.plot(tree)
-
 # Predicció train.
 train_prediction <- predict(tree, titanic_train_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")], type = 'class')
 ```
@@ -376,9 +361,8 @@ La forma correcta d'interpretar l'arbre de decisió representat és la següent:
 Seguidament, es construeix una matriu de confusió contrastant els resultats predits i els resultats coneguts del set d'entrenament. A partir d'aquesta matriu és possible estimar la precisió del model construït.
 
 ```{r}
-# Matriu de connfusió.
+# Matriu de confusió.
 confMat_train <- table(titanic_train_clean$Survived, train_prediction)
-
 # Càlcul de la precisió del model.
 accuracy_tree <- sum(diag(confMat_train))/sum(confMat_train)
 cat("El model d'arbre de decisió té una precisió del", round(accuracy_tree*100, 2),"% pel conjunt d'entrenament")
@@ -392,19 +376,15 @@ Finalment, s'efectua anàlogament la predicció de la variable `Survived` pel su
 # Predicció pel test.
 test_prediction <- predict(tree, titanic_test_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")], type = 'class')
 titanic_test_clean$Survived <- test_prediction
-
 # Fem la còpia del DF titanic_test_clean
 titanic_test_tree <- titanic_test_clean
-
 # Transformem Died en 0 i Survived en 1
 titanic_test_tree$Survived <- as.character(titanic_test_tree$Survived)
 titanic_test_tree$Survived[titanic_test_tree$Survived=="Died"] <- "0"
 titanic_test_tree$Survived[titanic_test_tree$Survived=="Survived"] <- "1"
 titanic_test_tree$Survived <- as.factor(titanic_test_tree$Survived)
-
 # Inspecció del resultat.
 head(titanic_test_tree[, c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
-
 ```
 
 Addicionalment, es presenta a continuació la corba ROC (*Receiver Operating Characteristic*), la qual presenta una primera idea gràfica de la capacitat de discriminació del model: mentre més s'aproxima a la cantonada superior esquerra més discriminant és, mentre que el cas contrari seria que el gràfic presentés una corba totalment plana prop de la diagonal. A més a més, es calcularà també l'àrea sota la corba AUROC (*Area Under the ROC*).
@@ -414,15 +394,12 @@ Addicionalment, es presenta a continuació la corba ROC (*Receiver Operating Cha
 train_prediction <- ifelse(train_prediction == "Died",
                            0,
                            1)
-
 # Construcció de la corba ROC.
 roc <- roc(titanic_train_clean$Survived,
            train_prediction,
            data = titanic_train_clean)
-
 # Representació de la corba ROC.
 plot(roc)
-
 # Càlcul de AUROC.
 roc
 ```
@@ -440,9 +417,7 @@ El primer pas a dur a terme en la construcció del model és el de trobar les va
 reg_log <- glm(Survived ~ Age + Sex_Numeric + Fare + Pclass + Embarked_Numeric,
                data = titanic_train_clean,
                family = binomial(link = logit))
-
 summary(reg_log)
-
 # Odds ratio.
 exp(coefficients(reg_log))
 ```
@@ -456,17 +431,13 @@ Un cop construït el model final de regressió logística s'efectuarà la predic
 reg_log <- glm(Survived ~ Age + Sex_Numeric + Pclass + Embarked_Numeric,
                data = titanic_train_clean,
                family = binomial)
-
 summary(reg_log)
-
 # Odds ratio.
 exp(coefficients(reg_log))
-
 # Predicció.
 pred_train <- ifelse(predict(reg_log, titanic_train_clean, type = "response")<0.5,
                      0,
                      1)
-
 # Precisió de la predicció.
 confMat_train <- table(titanic_train_clean$Survived,
                        pred_train)
@@ -484,21 +455,14 @@ reg_log_test_prediction <- predict(reg_log,
                                                  "Sex_Numeric",
                                                  "Embarked_Numeric","Pclass")],
                            type = 'response')
-
 # Assignació de valors.
 titanic_test_clean$Survived <- ifelse(reg_log_test_prediction < 0.5,
                                       0,
                                       1)
-
 # Fem la còpia del DF titanic_test_clean
 titanic_test_regLog <- titanic_test_clean
-
 # Transformem la variable Survived a factor
 titanic_test_regLog$Survived <- as.factor(titanic_test_regLog$Survived)
-
-# Inspecció dels registres.
-head(titanic_test_regLog[, c("Survived", "Age",
-=======
 # Inspecció dels registres.
 head(titanic_test_clean[, c("Survived", "Age",
                             "Fare", "Sex_Numeric",
@@ -512,10 +476,8 @@ Es presenta a continuació la corba ROC pel model de regressió construït. A m�
 roc <- roc(titanic_train_clean$Survived,
            pred_train,
            data = titanic_train_clean)
-
 # Corba ROC.
 plot(roc)
-
 # AUROC.
 roc
 ```
@@ -524,14 +486,51 @@ La figura mostra que el model és considerablement discriminant en una primera e
 
 # 5. Representació dels resultats
 
-En aquest cas l'exercici ens demana que extraiem un arxiu csv amb la nostra predicció pel conjunt de test. Així doncs, procedim a la creació de la funció que ens permeti extreure aquest arxiu per tal de presentar-lo com a resultat del nostre treball, i que pugui ser evaluat com en la competició de Kaggle **Titanic - Machine Learning from Disaster**
+A partir dels resultats obtinguts, les representacions en forma de taules i gràfics més interessants són aquelles que permeten avaluar la precisió dels dos models construïts a l'apartat anterior. En ambdós casos es mostrarà la matriu de confusió i una representació gràfica d'aquesta que permet que el resultat de les prediccions s'observi d'una forma molt més visual.
+
+## 5.1. Arbre de decisió
+
+```{r rep tree}
+# Matriu de confusió.
+(confMatrixTree <- table(titanic_train_clean$Survived, train_prediction))
+
+# Representació gràfica.
+fourfoldplot(confMatrixTree,color = c("#CC6666", "#99CC99"),
+             conf.level = 0, margin = 1, main = "Matriu de confusió")
+```
+
+## 5.2. Regressió logística
+
+```{r rep glm}
+# Matriu de confusió.
+(confMatrixGLM <- table(titanic_train_clean$Survived, pred_train))
+
+# Representació gràfica.
+fourfoldplot(confMatrixGLM,color = c("#CC6666", "#99CC99"),
+             conf.level = 0, margin = 1, main = "Matriu de confusió")
+```
+
+## 5.3. Extracció de fitxers per la competició de Kaggle
+
+En aquest cas l'exercici ens demana que extraiem un arxiu `csv` amb la nostra predicció pel conjunt de test. Així doncs, procedim a la creació de la funció que ens permeti extreure aquest arxiu per tal de presentar-lo com a resultat del nostre treball, i que pugui ser evaluat com en la competició de Kaggle **Titanic - Machine Learning from Disaster**.
 
 ```{r}
-# Creem el fitxer csv amb el resultat de l'arbre
+# Creem el fitxer csv amb el resultat de l'arbre.
 write.csv(titanic_test_tree[, c("PassengerId", "Survived")], "Tree Model.csv", row.names = FALSE)
-
-# Creem el fitxer csv amb el resultat de la regressió logística
+# Creem el fitxer csv amb el resultat de la regressió logística.
 write.csv(titanic_test_regLog[, c("PassengerId", "Survived")], "Logistic Regression Model.csv", row.names = FALSE)
 ```
 
 # 6. Conclusions
+
+Al llarg dels diferents mètodes d'anàlisi aplicats en aquest estudi, s'ha procurat comprendre quina és l'estructura de les dades que composen el dataset utilitzat i, en base a l'enteniment guanyat, s'ha procedit a la construcció de models de predicció i/o classificació amb les dades del subset d'entrenament que permetessin predir el resultat de la variable de resposta `Survived` al subset de prova.
+
+Primerament, s'ha construït una matriu de correlació amb les variables que s'han considerat rellevants amb la finalitat d'entendre com aquestes es troben interrelacionades entre si, amb l'objectiu de detectar possibles redundàncies i incongruències que permetessin ajustar d'una manera més òptima la informació de la qual es disposava. S'ha observat que l'única correlació estreta que era destacable de la matriu de correlació de Pearson construïda era l'existent entre `Pclass` i `Fare`, un resultat lògic tenint en compte que el preu d'entrada al vaixell ha d'estar directament relacionat amb la classe en la qual viatjava el passatger. Tot i el resultat obtingut, s'ha decidit seguir considerant ambdues variables en la construcció de models degut a que no suposava un gran cost computacional.
+
+A continuació, s'han utilitzat algorismes supervisats, un d'arbre de decisió o *Decision Tree* i un de regressió logística, per tal de construir un model que permetés predir el resultat de la variable de resposta al subset de prova. Ambdós mètodes han resultat satisfactoris en obtenir un 82.49% i un 79.01% de precisió, respectivament. En els dos casos s'han utilitzat les mateixes variables (`Age`, `Sex_Numeric`, `Embarked_Numeric` i `Pclass`), i en el cas de l'arbre de decisió també `Fare`, tot i que per la regressió logística aquesta variable no resultava significativa.
+
+El resultat més precís obtingut, el de l'arbre de decisió, mostra que les variables més significatives a l'hora de determinar si un determinat passatger sobreviurà o no a l'accident del Titanic són el sexe, l'edat, la tarifa i la classe (`Sex_Numeric`, `Age`, `Fare` i `Pclass`), essent el sexe la més determinant de totes. Això ho podem associar al fet que els primers passatgers que van ser evacuats van ser infants i dones.
+
+Finalment, cal esmentar que s'ha participat al concurs de Kaggle amb les dues prediccions generades a partir dels seus respectius models. Les puntuacions obtingudes han estat d'un 77.033% en el cas de l'arbre de decisió i un 75.119% en el cas de la regressió logística, tal com es pot observar a la següent figura.
+
+![](kaggle_score.jpg)
