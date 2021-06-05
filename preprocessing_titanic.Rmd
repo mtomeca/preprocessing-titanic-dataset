@@ -50,8 +50,6 @@ Les variables que podem trobar tant al fitxer train.csv com al de test.csv, són
 
 En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Podríem dir doncs, que per separar els registres entre el conjunt de test i el d'entrenament el mètode que més s'hi aproxima és el *k-fold cross validation* amb una k=3, essent la *regla dels dos terços*, la qual utilitza dos conjunts per l'entrenament i un pel test.
 
-NOTA:Per saber com funciona la divisió de les dades entre els conjunts train i test és bo mirar [aquest vídeo] (https://materials.campus.uoc.edu/cdocent/PID_00251986/).
-
 # 2. Integració i selecció de dades
 
 Les dades utilitzades es troben dividides en dos datasets diferents: un d'ells conté el subconjunt de dades que serà utilitzat al set d'entrenament o *training set* i l'altre conté aquelles que seran utilitzades al test de prova o *testing set* per comprovar l'eficàcia del model construït. Els dos subconjunts s'integraran en un de sol per facilitar el recompte de valors perduts que presenten.
@@ -291,11 +289,7 @@ qqnorm(r_train$Fare)
 
 Pel que fa a la variable *Fare*, tant del conjunt test com train, aquest desajust a la normal és encara més gran. Veiem que no segueix cap tipus de línia recta, indicant-nos que no segueix una distribució normal.
 
-Un cop fetes les representacions gràfiques, tocarà fer-ho des d'un punt de vista estadístic i no tant visual.
-
-Per fer-ho des d'un punt de vista estadístic, realitzarem dos tests: aplicarem el test de Shapiro i el test de Lillie. Tot i que teòricament el Shapiro Test només s'aplica en conjunts de valors on n > 30, nosaltres l'usarem igualment.
-
-Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre nivell de significació alfa de $\alpha=0.05$. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
+Un cop fetes les representacions gràfiques, es durà a terme aquesta comprovació des d'un pust de vista estadístic, realitzant dos tests: aplicarem el test de Shapiro i el test de Lillie. Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre nivell de significació alfa de $\alpha=0.05$. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
 
 ```{r}
 # Apliquem Shapiro Test a les variables del conjunt de train
@@ -340,7 +334,6 @@ var.test(r_test$Fare, r_train$Fare)
 ```
 
 Ara bé, per la variable *Fare* obtenim un valor de 0.004, la qual cosa ens obliga a rebutjar la hipòtesis nul·la d'igualtat de variàncies, i hem de considerar que les variàncies són diferents (heteroscedasticitat)
-
 
 ## 4.3. Aplicació dels mètodes d'anàlisis de dades
 
@@ -411,6 +404,7 @@ titanic_test_tree$Survived <- as.factor(titanic_test_tree$Survived)
 
 # Inspecció del resultat.
 head(titanic_test_tree[, c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+
 ```
 
 Addicionalment, es presenta a continuació la corba ROC (*Receiver Operating Characteristic*), la qual presenta una primera idea gràfica de la capacitat de discriminació del model: mentre més s'aproxima a la cantonada superior esquerra més discriminant és, mentre que el cas contrari seria que el gràfic presentés una corba totalment plana prop de la diagonal. A més a més, es calcularà també l'àrea sota la corba AUROC (*Area Under the ROC*).
@@ -504,6 +498,9 @@ titanic_test_regLog$Survived <- as.factor(titanic_test_regLog$Survived)
 
 # Inspecció dels registres.
 head(titanic_test_regLog[, c("Survived", "Age",
+=======
+# Inspecció dels registres.
+head(titanic_test_clean[, c("Survived", "Age",
                             "Fare", "Sex_Numeric",
                             "Embarked_Numeric","Pclass")])
 ```
@@ -536,6 +533,5 @@ write.csv(titanic_test_tree[, c("PassengerId", "Survived")], "Tree Model.csv", r
 # Creem el fitxer csv amb el resultat de la regressió logística
 write.csv(titanic_test_regLog[, c("PassengerId", "Survived")], "Logistic Regression Model.csv", row.names = FALSE)
 ```
-
 
 # 6. Conclusions
