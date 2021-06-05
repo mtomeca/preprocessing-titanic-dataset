@@ -48,7 +48,7 @@ Les variables que podem trobar tant al fitxer train.csv com al de test.csv, són
 - **cabin**: El número de cabina on s'allotjava el passatger. Equivaldria a un Id de la cabina.
 - **embarked**: El port on va embarcar el passatger. En aquest cas hi tenim 3 possibilitats (C = Cherbourg, Q = Queenstown i S = Southampton).
 
-En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Per saber com funciona la divisió de les dades entre els conjunts train i test és bo mirar [aquest vídeo](https://materials.campus.uoc.edu/cdocent/PID_00251986/).
+En una primera inspecció, veiem que el conjunt d'entrenament consta de 891 registres, mentre que el de test en té 418. Podríem dir doncs, que per separar els registres entre el conjunt de test i el d'entrenament el mètode que més s'hi aproxima és el *k-fold cross validation* amb una k=3, essent la *regla dels dos terços*, la qual utilitza dos conjunts per l'entrenament i un pel test.
 
 # 2. Integració i selecció de dades
 
@@ -254,8 +254,6 @@ legend("topright", c("curva observada", "curva teòrica"),
 
 Repetim els gràfics per les variables del conjunt de test.
 
-
-
 ```{r}
 hist(titanic_test_clean$Age, freq = F, ylim = c(0, 0.08), border = "gray50", xlab = "Variable Age", main = "Distribució variable Age (Conjunt Test)")
 lines(density(titanic_test_clean$Age))
@@ -273,9 +271,25 @@ legend("topright", c("curva observada", "curva teòrica"),
        lty = 1, lwd = 2, col = c("black", "red"), bty = "n", cex = 0.8)
 ```
 
-Un cop fetes les representacions gràfiques, tocarà fer-ho des d'un punt de vista estadístic i no tant visual.
+Una altra manera de fer la representació gràfica és usant els QQ-Plots. En aquest cas farem un QQ-plot per la variable *Age* i un altre per la variable *Fare*.
 
-Per fer-ho des d'un punt de vista estadístic, realitzarem dos tests: aplicarem el test de Shapiro i el test de Lillie. Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre nivell de significació alfa de $\alpha=0.05$. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
+```{r}
+# QQPlot Age
+qqnorm(r_test$Age)
+qqnorm(r_train$Age)
+```
+
+Per a la variable *Age*, tant del conjunt test com d'entrenament, a partir del gràfic QQ-Plot veiem que no acaba d'ajustar molt a una distribució normal, especialment pels valors inicials que es situen a la zona inferior esquerra. La resta de valors sí que segueixen una línia molt més recta, i per tant, tenen una aproximació a la normal.
+
+```{r}
+# QQPlot Age
+qqnorm(r_test$Fare)
+qqnorm(r_train$Fare)
+```
+
+Pel que fa a la variable *Fare*, tant del conjunt test com train, aquest desajust a la normal és encara més gran. Veiem que no segueix cap tipus de línia recta, indicant-nos que no segueix una distribució normal.
+
+Un cop fetes les representacions gràfiques, es durà a terme aquesta comprovació des d'un pust de vista estadístic, realitzant dos tests: aplicarem el test de Shapiro i el test de Lillie. Per ambdues proves prendrem un nivell de confiança del 95%, essent el nostre nivell de significació alfa de $\alpha=0.05$. Així doncs, si el p-valor és inferior a 0.05, no podrem garantir ni assegurar que les nostres variables segueixin una distribució normal. Per altra banda, si el p-valor és superior a 0.05, afirmarem que segueixen una distribució normal.
 
 ```{r}
 # Apliquem Shapiro Test a les variables del conjunt de train
@@ -301,10 +315,27 @@ lillie.test(titanic_test_clean$Fare)
 
 Si ho verifiquem amb el Lillie test, veiem que segons aquest les dades tampoc segueixen una distribució normal ni pel conjunt de train ni pel de test. Tots els p-values estan per sota del nivell de significació del 0.05.
 
+*Variàncies*
 
-NOTA: FALTA REALITZAR EL TEST DE LES VARIÀNCIES QUE HO FAREM AMB ANOVA.
+Pel que fa a les variàncies és important comprovar si les del conjunt d'entrenament i test són estadísticament semblants. Per tant, utilitzarem la funció var.test() per comprovar si es produeix homoscedasticitat o no entre les variables numèriques contínues que volem utilitzar per predir la variable *Survived*. Aquestes variables són: Age i Fare.
 
-## 4.3. Aplicació dels anàlisis de dades
+```{r}
+# Comencem amb Age
+var.test(r_test$Age, r_train$Age)
+```
+
+Per la variable *Age* obtenim un p-valor de 0.6183, el qual ens explica que no hi ha una diferència significativa entre les variàncies de la variable *Age* pel conjunt de test i entrenament.
+
+Repetim el procés amb *Fare*.
+
+```{r}
+# Ho apliquem a Fare
+var.test(r_test$Fare, r_train$Fare)
+```
+
+Ara bé, per la variable *Fare* obtenim un valor de 0.004, la qual cosa ens obliga a rebutjar la hipòtesis nul·la d'igualtat de variàncies, i hem de considerar que les variàncies són diferents (heteroscedasticitat)
+
+## 4.3. Aplicació dels mètodes d'anàlisis de dades
 
 ### 4.3.1. Matriu de correlació
 
@@ -362,8 +393,18 @@ Finalment, s'efectua anàlogament la predicció de la variable `Survived` pel su
 test_prediction <- predict(tree, titanic_test_clean[,c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric", "Pclass")], type = 'class')
 titanic_test_clean$Survived <- test_prediction
 
+# Fem la còpia del DF titanic_test_clean
+titanic_test_tree <- titanic_test_clean
+
+# Transformem Died en 0 i Survived en 1
+titanic_test_tree$Survived <- as.character(titanic_test_tree$Survived)
+titanic_test_tree$Survived[titanic_test_tree$Survived=="Died"] <- "0"
+titanic_test_tree$Survived[titanic_test_tree$Survived=="Survived"] <- "1"
+titanic_test_tree$Survived <- as.factor(titanic_test_tree$Survived)
+
 # Inspecció del resultat.
-head(titanic_test_clean[, c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+head(titanic_test_tree[, c("Survived", "Age", "Fare", "Sex_Numeric", "Embarked_Numeric")], 8)
+
 ```
 
 Addicionalment, es presenta a continuació la corba ROC (*Receiver Operating Characteristic*), la qual presenta una primera idea gràfica de la capacitat de discriminació del model: mentre més s'aproxima a la cantonada superior esquerra més discriminant és, mentre que el cas contrari seria que el gràfic presentés una corba totalment plana prop de la diagonal. A més a més, es calcularà també l'àrea sota la corba AUROC (*Area Under the ROC*).
@@ -449,6 +490,15 @@ titanic_test_clean$Survived <- ifelse(reg_log_test_prediction < 0.5,
                                       0,
                                       1)
 
+# Fem la còpia del DF titanic_test_clean
+titanic_test_regLog <- titanic_test_clean
+
+# Transformem la variable Survived a factor
+titanic_test_regLog$Survived <- as.factor(titanic_test_regLog$Survived)
+
+# Inspecció dels registres.
+head(titanic_test_regLog[, c("Survived", "Age",
+=======
 # Inspecció dels registres.
 head(titanic_test_clean[, c("Survived", "Age",
                             "Fare", "Sex_Numeric",
@@ -473,5 +523,15 @@ roc
 La figura mostra que el model és considerablement discriminant en una primera estimació visual, mentre que el valor obtingut per l'AUROC, d'aproximadament 0.78, permet assgurar que hem acoseguit un model que discrimina de forma adequada i ens trobem molt prop d'un model que discrimina de forma excel·lent, el qual correspon a un AUROC mínim de 0.8.
 
 # 5. Representació dels resultats
+
+En aquest cas l'exercici ens demana que extraiem un arxiu csv amb la nostra predicció pel conjunt de test. Així doncs, procedim a la creació de la funció que ens permeti extreure aquest arxiu per tal de presentar-lo com a resultat del nostre treball, i que pugui ser evaluat com en la competició de Kaggle **Titanic - Machine Learning from Disaster**
+
+```{r}
+# Creem el fitxer csv amb el resultat de l'arbre
+write.csv(titanic_test_tree[, c("PassengerId", "Survived")], "Tree Model.csv", row.names = FALSE)
+
+# Creem el fitxer csv amb el resultat de la regressió logística
+write.csv(titanic_test_regLog[, c("PassengerId", "Survived")], "Logistic Regression Model.csv", row.names = FALSE)
+```
 
 # 6. Conclusions
