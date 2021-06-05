@@ -531,7 +531,10 @@ En aquest cas l'exercici ens demana que extraiem un arxiu csv amb la nostra pred
 
 ```{r}
 # Creem el fitxer csv amb el resultat de l'arbre
-write.csv(titanic_test_tree[,c(1,2)], "Tree.csv", row.names = FALSE)
+write.csv(titanic_test_tree[, c("PassengerId", "Survived")], "Tree Model.csv", row.names = FALSE)
+
+# Creem el fitxer csv amb el resultat de la regressió logística
+write.csv(titanic_test_regLog[, c("PassengerId", "Survived")], "Logistic Regression Model.csv", row.names = FALSE)
 ```
 
 
