@@ -1,4 +1,4 @@
-#  Project
+# Kaggle Project: Titanic - Machine Learning from Disaster 
 
 Aquest projecte té per objectiu la predicció de la supervivència al Titanic a partir d'un joc de dades. Aquest exercici forma part d'una competició organitzada per Kaggle (Titanic - Machine Learning from Disaster)
 
