@@ -30,3 +30,4 @@ S’ha considerat oportú escollir la llicència **CC BY-NC-SA 4.0** per la publ
 # Resources
 
 - https://towardsdatascience.com/decision-tree-classification-of-diabetes-among-the-pima-indian-community-in-r-using-mlr-778ae2f87c69
+- https://rpubs.com/Joaquin_AR/218466
