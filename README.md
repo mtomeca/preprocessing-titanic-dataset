@@ -1,6 +1,6 @@
 # Kaggle Project: Titanic - Machine Learning from Disaster 
 
-Aquest projecte té per objectiu la predicció de la supervivència al Titanic a partir d'un joc de dades. Aquest exercici forma part d'una competició organitzada per Kaggle (Titanic - Machine Learning from Disaster)
+Aquest projecte té per objectiu la predicció de la supervivència al Titanic a partir d'un joc de dades. Aquest exercici forma part d'una competició organitzada per Kaggle (Titanic - Machine Learning from Disaster).
 
 # Membres del grup
 
@@ -14,6 +14,7 @@ Els arxius que formen part d'aquest treball són els següents:
 - **test.csv**: Fitxer proporcionat per Kaggle amb les dades que s'han d'utilitzar per a testejar l'algorisme predictiu.
 - **Tree Model.csv**: Arxiu que conté el resultat final obtingut amb el model d'arbre de decisió.
 - **Logistic Regression Model.csv**: Arxiu que conté el resultat final obtingut amb el model de regressió logística.
+- **kaggle_score.jpg**: imatge amb les puntuacions obtingudes a Kaggle.
 
 # Execució
 
@@ -31,3 +32,5 @@ S’ha considerat oportú escollir la llicència **CC BY-NC-SA 4.0** per la publ
 
 - https://towardsdatascience.com/decision-tree-classification-of-diabetes-among-the-pima-indian-community-in-r-using-mlr-778ae2f87c69
 - https://rpubs.com/Joaquin_AR/218466
+- http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
+- https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/fourfoldplot
