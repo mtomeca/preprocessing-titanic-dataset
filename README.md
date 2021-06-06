@@ -9,12 +9,13 @@ Els autors d'aquest treball són en Miquel Tomé Carreño i en Guillem Fernánde
 # Arxius
 
 Els arxius que formen part d'aquest treball són els següents:
-- **preprocessing-titanic.rmd**: Arxiu d'RStudio que conté tot el procediment utilitzat per a poder predir al supervivència dels passatgers
+- **titanic_project.rmd**: Arxiu d'RStudio que conté tot el procediment utilitzat per a poder predir al supervivència dels passatgers.
+- **titanic_project.html**: Informe `html` generat a partir del fitxer rmd anterior on es desenvolupa el projecte.
 - **train.csv**: Fitxer proporcionat per Kaggle amb les dades que s'han d'utilitzar per a l'entrenament de l'algorisme predictiu.
 - **test.csv**: Fitxer proporcionat per Kaggle amb les dades que s'han d'utilitzar per a testejar l'algorisme predictiu.
 - **Tree Model.csv**: Arxiu que conté el resultat final obtingut amb el model d'arbre de decisió.
 - **Logistic Regression Model.csv**: Arxiu que conté el resultat final obtingut amb el model de regressió logística.
-- **kaggle_score.jpg**: imatge amb les puntuacions obtingudes a Kaggle.
+- **kaggle_score.jpg**: Imatge amb les puntuacions obtingudes a Kaggle.
 
 # Execució
 
