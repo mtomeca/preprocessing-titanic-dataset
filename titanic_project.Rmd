@@ -1,5 +1,5 @@
 ---
-title: "Preprocessing Titanic Dataset"
+title: "Titanic Project (Kaggle)"
 author: "Guillem Fernández Pallarès i Miquel Tomé Carreño"
 date: "`r format(Sys.Date(),'%e de %B, %Y')`"
 output:
@@ -16,6 +16,7 @@ toc-title: Índex
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # Packages to import
+library("kableExtra")
 library("tidyr")
 library("party")
 library("rpart")
@@ -534,3 +535,15 @@ El resultat més precís obtingut, el de l'arbre de decisió, mostra que les var
 Finalment, cal esmentar que s'ha participat al concurs de Kaggle amb les dues prediccions generades a partir dels seus respectius models. Les puntuacions obtingudes han estat d'un 77.033% en el cas de l'arbre de decisió i un 75.119% en el cas de la regressió logística, tal com es pot observar a la següent figura.
 
 ![](kaggle_score.jpg)
+
+# 7. Quadre 
+
+Finalment, presentarem el quadre de col·laboracions i el farem amb la llibreria Kable.
+```{r}
+# Quadre de contribucions amb la llibreria Kable
+out <- data.frame(Contribucions = c("Descripció del Dataset", "Integració i selecció de dades", "Neteja de dades", "Anàlisi de dades", "Representació dels resultats", "Resolució del problema", "Codi", "Conclusions"),
+                  Firma = c("Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé", "Guillem Fernández i Miquel Tomé"))
+
+out %>% kable() %>% kable_styling()
+```
+                  

@@ -19,7 +19,7 @@ Els arxius que formen part d'aquest treball són els següents:
 
 # Execució
 
-Per a la correcte execució d'aquest programa és necessari executar el fitxer **preprocessing-titanic.rmd**. Com a resultat s'obtindran els fitxers **Tree Model.csv** i **Logistic Regression.csv** al mateix directori on s'executi l'arxiu **preprocessing-titanic.rmd**.
+Per a la correcte execució d'aquest programa és necessari executar el fitxer **preprocessing-titanic.rmd**. Com a resultat s'obtindran els fitxers **Tree Model.csv** i **Logistic Regression Model.csv** al mateix directori on s'executi l'arxiu **titanic_project.rmd**.
 
 # Llicència
 
